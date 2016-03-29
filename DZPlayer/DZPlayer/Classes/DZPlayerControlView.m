@@ -303,7 +303,7 @@ static const CGFloat dzVideoControlBarAutoFadeOutTimeInterval = 5.0;
         _movieFastView = [[UIImageView alloc]init];
         _movieFastView.alpha = 0.0;
 //        _movieFastView.image = [UIImage imageNamed:[self videoImageName:@"kr-video-player-play"]];
-        _movieFastView.bounds = CGRectMake(0, 0, 150, 150);
+        _movieFastView.bounds = CGRectMake(0, 0, 50, 50);
     }
     return _movieFastView;
 }

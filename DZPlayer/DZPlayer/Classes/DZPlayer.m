@@ -20,10 +20,10 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
 @property (nonatomic, assign) DZPlayerMoveState moveState;
 @property (nonatomic, assign) CGPoint startMovePoint;
 
-@property (nonatomic,strong)UISlider *volumeSlider;
-@property (nonatomic,strong)UISlider *slider;
-@property (nonatomic,assign)CGPoint firstPoint;
-@property (nonatomic,assign)CGPoint secondPoint;
+@property (nonatomic, strong)UISlider *volumeViewSlider;
+@property (nonatomic, strong)UISlider *slider;
+@property (nonatomic, assign)CGPoint firstPoint;
+@property (nonatomic, assign)CGPoint secondPoint;
 
 @end
 
@@ -51,6 +51,7 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
     self.videoControl.frame = self.view.bounds;
     [self configObserver];
     [self configControlAction];
+    [self configureVolume];
     self.moveState = None;
     self.startMovePoint = CGPointZero;
     return self;
@@ -72,6 +73,8 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
     DZPlayer *viewController = [[self class] SObject];
     [viewController setContentURL:contentURL];
     viewController.videoControl.nameLabel.text = name;
+    
+    //获取系统音量
 }
 
 #pragma mark - Public Method
@@ -157,6 +160,27 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
     [self.videoControl.shareBt addTarget:self action:@selector(shareBtClick) forControlEvents:UIControlEventTouchUpInside];
 
 }
+
+//获取系统音量
+- (void)configureVolume{
+    MPVolumeView *volumeView = [[MPVolumeView alloc] init];
+    _volumeViewSlider = nil;
+    for (UIView *view in [volumeView subviews]){
+        if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
+            _volumeViewSlider = (UISlider *)view;
+            break;
+        }
+    }
+    
+    // 使用这个category的应用不会随着手机静音键打开而静音，可在手机静音下播放声音
+//    NSError *setCategoryError = nil;
+//    BOOL success = [[AVAudioSession sharedInstance]
+//                    setCategory: AVAudioSessionCategoryPlayback
+//                    error: &setCategoryError];
+//    
+//    if (!success) { /* handle the error in setCategoryError */ }
+}
+
 
 - (void)onMPMoviePlayerPlaybackStateDidChangeNotification{
     if (self.playbackState == MPMoviePlaybackStatePlaying) {
@@ -291,11 +315,12 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
 }
 
 - (void)pan:(UIPanGestureRecognizer *)gesture{
-    CGPoint translatedPoint = [gesture translationInView:gesture.view];
-    CGPoint locationPoint = [gesture locationInView:gesture.view];
-//    UIImage *image0 = [UIImage imageNamed:@"ic_fast_forward_white"];
-//    UIImage *image1 = [UIImage imageNamed:@"ic_fast_backward_white"];
-    if(!CGRectContainsPoint(self.videoControl.bottomBar.frame, locationPoint)){
+    CGPoint locationPoint = [gesture locationInView:self.videoControl];
+    CGPoint veloctyPoint = [gesture velocityInView:self.videoControl];
+
+    UIImage *image0 = [UIImage imageNamed:@"ic_fast_forward_white"];
+    UIImage *image1 = [UIImage imageNamed:@"ic_fast_backward_white"];
+    if(!CGRectContainsPoint(self.videoControl.bottomBar.frame, locationPoint) && (self.videoControl.lockBt.selected!=YES)){
         switch (gesture.state) {
             case UIGestureRecognizerStateBegan:
             {
@@ -305,64 +330,33 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
                 }
                 
                 self.startMovePoint = locationPoint;
-                if (fabs(translatedPoint.y) > fabs(translatedPoint.x)) { //上下移动 声音
-                    self.moveState = Volume;
+                if (fabs(veloctyPoint.y) > fabs(veloctyPoint.x)) { //上下移动 声音
+                    if (locationPoint.x > self.videoControl.bounds.size.width / 2) {
+                        self.moveState = Volume;
+                    }else { // 状态改为显示亮度调节
+                        self.moveState = Bright;
+                    }
                 }else { //左右移动 播放进度
                     self.moveState = Progress;
-    //                NSLog(@"%@",NSStringFromCGPoint(translatedPoint));
-    //                self.videoControl.movieFastView.image = translatedPoint.x >= 0 ? image0 : image1;
-    //                self.videoControl.movieFastView.alpha = 1;
-                    //begin
                     [self pause];
                     [self.videoControl cancelAutoFadeOutControlBar];
+                    self.videoControl.movieFastView.image = veloctyPoint.x >= 0 ? image0 : image1;
+                    self.videoControl.movieFastView.alpha = 1;
                 }
-                
             }
                 break;
             case UIGestureRecognizerStateChanged:
             {
                 switch (self.moveState) {
                     case Volume:{
-                        MPMusicPlayerController *mpc = [MPMusicPlayerController systemMusicPlayer];
-                        float volume0 = mpc.volume;
-                        CGFloat dist = locationPoint.y - self.startMovePoint.y;
-                        CGFloat add = -1 *dist /1500;
-                        float volume = volume0 + add;
-                        volume = (floorf(volume*100.0))/100.0;
-                        if (volume != volume0) {
-                            mpc.volume = volume;
-                        }
-                        volume0 = mpc.volume;
-                        [[MPMusicPlayerController applicationMusicPlayer] setVolume:volume0];
-
-
-//
-//                        MPVolumeView *volumeView = [[MPVolumeView alloc] init];
-//                        [self.view addSubview:volumeView];
-//                        [volumeView sizeToFit];
-//                        
-//                        self.slider = [[UISlider alloc]init];
-//                        self.slider.backgroundColor = [UIColor blueColor];
-//                        for (UIControl *view in volumeView.subviews) {
-//                            if ([view.superclass isSubclassOfClass:[UISlider class]]) {
-//                                self.slider = (UISlider *)view;
-//                            }
-//                        }
-//                        self.slider.autoresizesSubviews = NO;
-//                        self.slider.autoresizingMask = UIViewAutoresizingNone;
-//                        [self.view addSubview:self.slider];
-//                        self.slider.hidden = YES;
-//                        NSLog(@"%f",self.slider.value);
-//                        
-//                        self.volumeSlider = [[UISlider alloc]initWithFrame:self.videoControl.movieFastView.frame];
-//                        self.volumeSlider.backgroundColor = [UIColor yellowColor];
-//                        self.volumeSlider.minimumValue = 0.0;
-//                        self.volumeSlider.maximumValue = 1.0;
-//                        self.volumeSlider.continuous = YES;
-//                        [self.volumeSlider addTarget:self action:@selector(volumeChange) forControlEvents:UIControlEventValueChanged];
-//                        [self.view addSubview:self.volumeSlider];
+                        self.volumeViewSlider.value -= veloctyPoint.y / 10000;
                     }
                         break;
+                    case Bright:{
+                        [UIScreen mainScreen].brightness -= veloctyPoint.y / 10000;
+                    }
+                        break;
+
                     case Progress:{
     //                    dist        slider.value
     //                   -----   =  ---------------
@@ -371,9 +365,10 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
                         double time = floor(dist*self.duration/self.view.frame.size.width);
                         double totalTime = floor(self.duration);
                         time += self.videoControl.progressSlider.value;
+//                        self.videoControl.progressSlider.value = time;//进度随手势移动 但是过快
                         [self setTimeLabelValues:time totalTime:totalTime];
                         [self setCurrentPlaybackTime:floor(time)];
-
+                        self.videoControl.movieFastView.image = dist > 0 ? image0 : image1;
                     }
                         break;
                     default:
@@ -384,9 +379,6 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
             case UIGestureRecognizerStateEnded:
             case UIGestureRecognizerStateCancelled:
             {
-//                CGFloat dist = locationPoint.y - self.startMovePoint.y;
-//                double time = floor(dist*self.duration/self.view.frame.size.width);
-//                [self setCurrentPlaybackTime:floor(time)];
                 switch (self.moveState) {
                     case Volume:{
                         self.moveState = None;
@@ -394,11 +386,18 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
                         break;
                     case Progress:{
                         [self play];
+                        self.videoControl.playButton.selected = YES;
                         [self.videoControl autoFadeOutControlBar];
+                        [UIView animateWithDuration:0.3f animations:^{
+                            self.videoControl.movieFastView.alpha = 0;
+                        } completion:nil];
                         self.moveState = None;
                     }
                         break;
                 default:
+                    {
+                        self.moveState = None;
+                    }
                         break;
                 }
             }
@@ -475,12 +474,6 @@ static const CGFloat dzVideoPlayerControllerAnimationTimeInterval = 0.3f;
 
 - (void)updateValue:(UISlider *)slider{
     self.slider.value = slider.value;
-}
-
-- (void)volumeChange
-{
-    [[MPMusicPlayerController applicationMusicPlayer] setVolume:self.volumeSlider.value];
-    
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{

@@ -1,7 +1,6 @@
-# DZPlayer
-    simple way to play video in iOS  
-    基于MPMoviePlayerController，支持横竖屏，上下滑动调节音量、屏幕亮度，左右滑动调节播放进度，缓冲进度显示（有点小问题）,锁屏（下载，社交分享，收藏，airplay等按钮已经包含，功能请自行在回调中实现）。 Based on MPMoviePlayerController, support for the horizontal screen, vertical screen (full screen playback can also lock the screen direction), the upper and lower slide to adjust the volume, the screen brightness, or so slide to adjust the playback progress。
-
+#DZPlayer
+simple way to play video in iOS  
+基于MPMoviePlayerController，支持横竖屏，上下滑动调节音量、屏幕亮度，左右滑动调节播放进度，缓冲进度显示（有点小问题）,锁屏（下载，社交分享，收藏，airplay等按钮已经包含，功能请自行在回调中实现）。 Based on MPMoviePlayerController, support for the horizontal screen, vertical screen (full screen playback can also lock the screen direction), the upper and lower slide to adjust the volume, the screen brightness, or so slide to adjust the playback progress。
 ##代码实现
 ```
  CGFloat width = [UIScreen mainScreen].bounds.size.width;
@@ -47,8 +46,8 @@
 ```
 
 模拟器没办法显示音量亮度的调节 请在真机上测试
-
+###手机旋转设置
 ![手机旋转设置](https://raw.githubusercontent.com/fonglaaaam/DZPlayer/master/DZPlayer/DZPlayer/setting.png)
-
+###模拟器演示
 ![模拟器演示](https://raw.githubusercontent.com/fonglaaaam/DZPlayer/master/DZPlayer/DZPlayer/DZPlayer.gif)
 

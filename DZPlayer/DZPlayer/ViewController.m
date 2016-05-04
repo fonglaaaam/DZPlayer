@@ -51,7 +51,7 @@
                 case DZPClickClose:{/* Do What U Want */}break;
                 case DZPClickCollect:{
                     //模拟网络请求失败
-                    double delayInSeconds = 1.0;
+                    double delayInSeconds = 1.2;
                     dispatch_time_t failTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
                     dispatch_after(failTime, dispatch_get_main_queue(), ^(void){
                         [DZPlayer SObject].videoControl.collectBt.selected = NO;
